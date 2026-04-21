@@ -1,4 +1,6 @@
 
+using BookingSystemApi.Data;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 namespace BookingSystemApi
@@ -14,6 +16,9 @@ namespace BookingSystemApi
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+
+            builder.Services.AddDbContext<appDbContext>(options =>
+                options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=MyAppDb;Trusted_Connection=True;"));
 
             var app = builder.Build();
 

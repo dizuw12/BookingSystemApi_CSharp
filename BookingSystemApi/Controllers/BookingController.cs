@@ -1,4 +1,5 @@
-﻿using BookingSystemApi.Models;
+﻿using BookingSystemApi.Data;
+using BookingSystemApi.Models;
 using Microsoft.AspNetCore.Mvc;
 namespace BookingSystemApi.Controllers
 {
@@ -6,46 +7,65 @@ namespace BookingSystemApi.Controllers
     [Route("/api[controller]")]
     public class BookingController : ControllerBase
     {
-        private static List<Booking> _booking = new List<Booking>();  
-        private static int NextID = 1;
+        private readonly appDbContext _context;
+        
+        public BookingController(appDbContext booking)
+        {
+            _context = booking;
+        }
+
+
         [HttpGet]
         public IActionResult GetAll()
         {
-            return Ok(_booking);
+            return Ok(_context.Bookings.ToList());
         }
+
+
         [HttpGet("avilable")]
         public IActionResult GetAll(DateTime date)
         {
-            var avilable = _booking.Any(x => x.Date == date);
+            var avilable = _context.Bookings.Any(x => x.Date == date);
                 return Ok(!avilable);
         }
+
+
         [HttpPost]
-        public IActionResult NewBooking(Booking booking)
+        public IActionResult NewBooking(CreatBookingDto dto)
         {
-            var exist = _booking.Any(x => x.Date == booking.Date);
+            var exist = _context.Bookings.Any(x => x.Date == dto.Date);
             if (exist)
             {
                 return BadRequest();
             }
-            if (string.IsNullOrWhiteSpace(booking.Name))
+            if (string.IsNullOrWhiteSpace(dto.Name))
                 return BadRequest("Enter Name");
 
-            if (booking.Date < DateTime.Now)
+            if (dto.Date < DateTime.Now)
                 return BadRequest("Enter correct Date");
 
-            booking.Id = NextID++;
-            _booking.Add(booking);
+            var booking = new Booking
+            {
+                Name = dto.Name,
+                Date = dto.Date,
+            };
+            _context.Bookings.Add(booking);
+            _context.SaveChanges();
             return Ok(booking);
         }
+
+
         [HttpDelete("{id}")]
         public IActionResult DeleteBooking(int id)
         {
-            var booking = _booking.FirstOrDefault(x => x.Id == id);
+            var booking = _context.Bookings.FirstOrDefault(x => x.Id == id);
             if (booking == null)
             {
                 return NotFound();
             }
-            _booking.Remove(booking);
+            _context.Bookings.Remove(booking);
+            _context.SaveChanges();
+
             return Ok();
         }
        
